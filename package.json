@@ -1,0 +1,31 @@
+{
+  "name": "lovely-farm",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lovely Farm — a fan remake of the Mail.ru social farming game Lyubimaya Ferma (2010–2016)",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "tsc --noEmit && tsc -p server/tsconfig.json && vite build",
+    "start": "node server/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit && tsc -p server/tsconfig.json && tsc -p tsconfig.tests.json",
+    "test:e2e": "playwright test",
+    "test:all": "npm run typecheck && npm run coverage && npm run test:e2e",
+    "screenshots": "node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.4",
+    "@vitest/coverage-v8": "^5.0.3",
+    "happy-dom": "^20.14.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

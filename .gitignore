@@ -1,0 +1,14 @@
+node_modules
+dist
+.DS_Store
+.e2e-data
+data
+test-results
+playwright-report
+coverage
+.idea
+.vscode
+*.log
+
+# the owner's local working notes (AI sessions, changelog) — never committed
+.ai/
