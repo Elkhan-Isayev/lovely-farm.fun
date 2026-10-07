@@ -1,6 +1,7 @@
-# Production stack on the server (/opt/lovely-farm): the game behind Caddy, which terminates HTTPS.
-# Only Caddy publishes ports (80/443); the game is reachable from Caddy alone.
-# Settings come from /opt/lovely-farm/.env (SITE_ADDRESS, SECURE_COOKIE) — see deploy/README.md.
+# Production stack on the server (/opt/lovely-farm): the game behind Caddy, which serves HTTPS to Cloudflare.
+# Caddy uses the host network, so the firewall (ufw, only Cloudflare may reach 80/443 — cloudflare.sh) really
+# applies to it; Docker-published ports would bypass ufw. The game listens on 127.0.0.1:3000 only.
+# Settings come from /opt/lovely-farm/.env (SECURE_COOKIE) — see deploy/README.md.
 name: lovely-farm
 
 x-hardening: &hardening
@@ -15,8 +16,10 @@ services:
     <<: *hardening
     image: lovely-farm:current # loaded by deploy.sh from the CI build
     environment:
-      SECURE_COOKIE: ${SECURE_COOKIE:-0} # 1 once the site is served over HTTPS
+      SECURE_COOKIE: ${SECURE_COOKIE:-1} # the site is served over HTTPS
       TRUST_PROXY: "1" # the client IP comes from Caddy's X-Forwarded-For
+    ports:
+      - "127.0.0.1:3000:3000" # loopback only: Caddy on the host network reaches it, the internet does not
     volumes:
       - farm-data:/data
     read_only: true
@@ -29,14 +32,11 @@ services:
     <<: *hardening
     image: caddy:2-alpine
     depends_on: [farm]
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80} # ":80" until the domain points here, then "lovely-farm.fun, www.lovely-farm.fun"
+    network_mode: host
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./cloudflare.caddy:/etc/caddy/cloudflare.caddy:ro # written by cloudflare.sh
+      - ./certs:/etc/caddy/certs:ro # Cloudflare origin certificate
       - caddy-data:/data
       - caddy-config:/config
     cap_drop: [ALL]

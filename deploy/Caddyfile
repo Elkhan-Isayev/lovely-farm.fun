@@ -1,15 +1,38 @@
-# Reverse proxy in front of the game. With a domain in SITE_ADDRESS Caddy gets and renews
-# Let's Encrypt certificates by itself and redirects HTTP to HTTPS.
+# The site is served through Cloudflare (proxied DNS, SSL mode "Full (strict)"). Caddy terminates TLS
+# with a Cloudflare origin certificate (./certs, valid for lovely-farm.fun and *.lovely-farm.fun) and
+# forwards to the game on 127.0.0.1:3000. The firewall lets only Cloudflare reach 80/443 (cloudflare.sh).
 {
 	admin off
+	servers {
+		# the real visitor's address: believe Cloudflare's header only when the request comes from Cloudflare
+		import /etc/caddy/cloudflare.caddy
+		client_ip_headers CF-Connecting-IP
+	}
 }
 
-{$SITE_ADDRESS} {
+(origin_tls) {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+}
+
+lovely-farm.fun {
+	import origin_tls
+	# access log to stdout (rotated by Docker); client_ip is the visitor, not Cloudflare
+	log {
+		output stdout
+		format json
+	}
 	encode zstd gzip
 	header {
-		# only takes effect over HTTPS; browsers ignore it on plain HTTP
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		-Server
 	}
-	reverse_proxy farm:3000
+	reverse_proxy 127.0.0.1:3000 {
+		# one entry, the visitor resolved above; the game takes the last X-Forwarded-For entry (TRUST_PROXY)
+		header_up X-Forwarded-For {client_ip}
+	}
+}
+
+www.lovely-farm.fun {
+	import origin_tls
+	redir https://lovely-farm.fun{uri} permanent
 }

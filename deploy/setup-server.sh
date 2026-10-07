@@ -102,6 +102,10 @@ CONF
   # daily database backup at 03:15 UTC
   echo "15 3 * * * root $APP/backup.sh >> /var/log/lovely-farm-backup.log 2>&1" > /etc/cron.d/lovely-farm-backup
   chmod 644 /etc/cron.d/lovely-farm-backup
+  # weekly refresh of Cloudflare's address ranges (firewall + Caddy); the first run happens after the
+  # app files are installed, and from then on 80/443 are open to Cloudflare only
+  echo "40 4 * * 1 root [ -x $APP/cloudflare.sh ] && $APP/cloudflare.sh >> /var/log/lovely-farm-cloudflare.log 2>&1" > /etc/cron.d/lovely-farm-cloudflare
+  chmod 644 /etc/cron.d/lovely-farm-cloudflare
 }
 
 lockdown() {

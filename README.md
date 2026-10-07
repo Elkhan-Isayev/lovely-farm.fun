@@ -327,7 +327,7 @@ Russian text in tests appears only where a test checks the Russian locale's outp
 
 ## 🚢 Deployment
 
-Production runs on a DigitalOcean droplet (Ubuntu 24.04): the game in Docker behind [Caddy](https://caddyserver.com) (automatic HTTPS). Everything is in [`deploy/`](deploy/README.md); **CI/CD** is [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+Production: **https://lovely-farm.fun** — Cloudflare in front, a DigitalOcean droplet (Ubuntu 24.04) behind it, the game in Docker behind [Caddy](https://caddyserver.com). Everything is in [`deploy/`](deploy/README.md); **CI/CD** is [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
 ```mermaid
 flowchart LR
@@ -336,7 +336,7 @@ flowchart LR
     BUILD -->|"docker save | ssh"| SRV["server: deploy.sh<br/>load → restart → health check → rollback on failure"]
 ```
 
-- **Security**: no root login, SSH keys only (no passwords), only ports 22/80/443 open (ufw), fail2ban, automatic security updates; the CI key can only run `deploy.sh`; the game container is unprivileged, read-only, without capabilities, reachable only through Caddy; strict CSP and security headers.
+- **Security**: Cloudflare in front (DDoS protection, "Full (strict)" TLS to an origin certificate) and the web ports open to Cloudflare only; no root login, SSH keys only (no passwords), fail2ban, automatic security updates; the CI key can only run `deploy.sh`; the game container is unprivileged, read-only, without capabilities, reachable only through Caddy; strict CSP and security headers.
 - **Backups**: a consistent SQLite copy every night (`deploy/backup.sh`), 14 days kept.
 
 Running it yourself:
