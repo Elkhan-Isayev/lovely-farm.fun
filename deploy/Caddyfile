@@ -1,0 +1,15 @@
+# Reverse proxy in front of the game. With a domain in SITE_ADDRESS Caddy gets and renews
+# Let's Encrypt certificates by itself and redirects HTTP to HTTPS.
+{
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	header {
+		# only takes effect over HTTPS; browsers ignore it on plain HTTP
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy farm:3000
+}

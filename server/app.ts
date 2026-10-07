@@ -17,7 +17,23 @@ export interface AppOptions {
   secureCookie?: boolean;
   now?: () => number; // overridden in tests
   rateLimit?: number; // sign-in attempts per minute per IP
+  trustProxy?: boolean; // behind our own reverse proxy: the client IP is the last X-Forwarded-For entry
 }
+
+/** Sent with every response. */
+const SECURITY_HEADERS: Record<string, string> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'same-origin',
+  'X-Frame-Options': 'DENY',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+};
+
+/** For the page itself: only our own scripts; Google Fonts; data: images (rendered icons). */
+export const CSP = [
+  "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:", "media-src 'self'", "connect-src 'self'",
+  "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
+].join('; ');
 
 /* ---------------- utilities ---------------- */
 
@@ -80,10 +96,19 @@ export function createApp(opts: AppOptions) {
   /** Day number in Moscow time (UTC+3): one shared "day" for everyone. */
   function today() { return Math.floor((now() + 3 * 3_600_000) / 86_400_000); }
 
+  /**
+   * The client's address. X-Forwarded-For is only believed behind our own proxy, and then only its last
+   * entry (the one the proxy appended): anything before it was sent by the client and can be forged.
+   */
+  function clientIp(req: IncomingMessage) {
+    const fwd = opts.trustProxy ? (req.headers['x-forwarded-for'] as string | undefined)?.split(',').at(-1)?.trim() : '';
+    return fwd || req.socket.remoteAddress || '?';
+  }
+
   // simple rate limiting for sign-in/sign-up
   const hits = new Map<string, { n: number; t: number }>();
   function rateLimit(req: IncomingMessage, limit = LIMIT) {
-    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || req.socket.remoteAddress || '?';
+    const ip = clientIp(req);
     const t = now();
     const h = hits.get(ip);
     if (!h || t - h.t > 60_000) { hits.set(ip, { n: 1, t }); return; }
@@ -141,6 +166,12 @@ export function createApp(opts: AppOptions) {
   const routes: [string, RegExp, Handler][] = [];
   const route = (method: string, path: string, h: Handler) =>
     routes.push([method, new RegExp('^' + path.replace(/:\w+/g, '([^/]+)') + '$'), h]);
+
+  // liveness for the container health check and deploys: the process answers and the database works
+  route('GET', '/api/health', (_req, res) => {
+    db.prepare('SELECT 1').get();
+    json(res, 200, { ok: true });
+  });
 
   route('POST', '/api/register', async (req, res) => {
     rateLimit(req, Math.ceil(LIMIT / 2));
@@ -350,6 +381,7 @@ export function createApp(opts: AppOptions) {
       const data = await readFile(file);
       const immutable = file.includes(`${join(STATIC_DIR, 'assets')}`);
       const headers: Record<string, string | number> = {
+        ...(extname(file) === '.html' ? { 'Content-Security-Policy': CSP } : {}),
         'Content-Type': MIME[extname(file)] ?? 'application/octet-stream',
         'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache',
         'Accept-Ranges': 'bytes',
@@ -378,6 +410,7 @@ export function createApp(opts: AppOptions) {
   /* ---------------- request handler ---------------- */
 
     async function handle(req: IncomingMessage, res: ServerResponse) {
+      for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.setHeader(k, v);
       try {
         const path = new URL(req.url!, 'http://x').pathname;
         if (path.startsWith('/api/')) {

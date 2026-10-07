@@ -6,7 +6,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { checkPassword, createApp, hashPassword, HELP_LIMIT } from '../server/app.ts';
+import { CSP, checkPassword, createApp, hashPassword, HELP_LIMIT } from '../server/app.ts';
 import { openDb } from '../server/db.ts';
 
 const dir = mkdtempSync(join(tmpdir(), 'farm-test-'));
@@ -26,7 +26,7 @@ let base = '';
 
 beforeAll(async () => {
   db = openDb(join(dir, 'db', 'farm.sqlite'));
-  app = createApp({ db, staticDir, now: () => clock, rateLimit: 1000 });
+  app = createApp({ db, staticDir, now: () => clock, rateLimit: 1000, trustProxy: true });
   server = createServer(app.handle);
   await new Promise<void>((r) => server.listen(0, r));
   base = `http://localhost:${(server.address() as { port: number }).port}`;
@@ -341,7 +341,7 @@ describe('static files and misc', () => {
   });
 
   it('sign-in rate limiting', async () => {
-    const strict = createApp({ db, staticDir, rateLimit: 2, now: () => clock });
+    const strict = createApp({ db, staticDir, rateLimit: 2, now: () => clock, trustProxy: true });
     const s = createServer(strict.handle);
     await new Promise<void>((r) => s.listen(0, r));
     const url = `http://localhost:${(s.address() as { port: number }).port}`;
@@ -352,6 +352,45 @@ describe('static files and misc', () => {
     clock += 61_000;
     expect((await login()).status).toBe(401);
     s.close();
+  });
+
+  it('a forged X-Forwarded-For does not get around the limit', async () => {
+    const serve = async (trustProxy: boolean) => {
+      const a = createApp({ db, staticDir, rateLimit: 2, now: () => clock, trustProxy });
+      const s = createServer(a.handle);
+      await new Promise<void>((r) => s.listen(0, r));
+      return { s, url: `http://localhost:${(s.address() as { port: number }).port}` };
+    };
+    // directly exposed: the header is ignored, every request counts for the real address
+    const direct = await serve(false);
+    let n = 0;
+    const statuses = [];
+    for (let i = 0; i < 3; i++) statuses.push((await fetch(direct.url + '/api/login', { method: 'POST', body: '{}', headers: { 'x-forwarded-for': `10.0.0.${n++}` } })).status);
+    expect(statuses).toEqual([401, 401, 429]);
+    direct.s.close();
+    // behind the proxy: only the last entry (appended by the proxy) counts; the client's own prefix is ignored
+    const proxied = await serve(true);
+    const res = [];
+    for (let i = 0; i < 3; i++) res.push((await fetch(proxied.url + '/api/login', { method: 'POST', body: '{}', headers: { 'x-forwarded-for': `6.6.6.${i}, 5.5.5.5` } })).status);
+    expect(res).toEqual([401, 401, 429]);
+    proxied.s.close();
+  });
+
+  it('health check', async () => {
+    const r = await fetch(base + '/api/health');
+    expect(r.status).toBe(200);
+    expect(await r.json()).toEqual({ ok: true });
+  });
+
+  it('security headers on every response; a strict CSP for the page', async () => {
+    const page = await fetch(base + '/');
+    for (const h of ['x-content-type-options', 'referrer-policy', 'x-frame-options', 'permissions-policy']) expect(page.headers.get(h)).toBeTruthy();
+    expect(page.headers.get('content-security-policy')).toBe(CSP);
+    expect(CSP).toContain("script-src 'self'");
+    expect(CSP).toContain("frame-ancestors 'none'");
+    const api = await fetch(base + '/api/me');
+    expect(api.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(api.headers.get('content-security-policy')).toBeNull();
   });
 
   it('unexpected error → 500 without details', async () => {

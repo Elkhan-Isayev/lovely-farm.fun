@@ -9,7 +9,7 @@ A fan remake of *Lyubimaya Ferma* ("Lovely Farm", Mail.ru, 2010–2016) as a mul
 - Talk to the owner **in Russian**.
 - **Everything is English** — code, comments, **all documentation** (README, `docs/`, `CLAUDE.md`, `scripts/art/prompts.md`, the local `.ai/` notes), test titles and assertions, commit messages.
 - **Russian text lives only in localization** (`src/i18n/`). No exceptions: tests run in English (`tests/setup.ts`), Russian output is checked against the dictionaries (`MESSAGES.ru[...]`), deliberate Cyrillic test inputs are written as `\u` escapes. `tests/repo.test.ts` fails on any Cyrillic outside `src/i18n/`.
-- The repository is **public**: never commit secrets, `.env` files, databases or the `.ai/` notes.
+- Treat the repository as **public** (it may be opened at any time): never commit secrets, `.env` files, databases or the `.ai/` notes.
 - The owner gives big tasks and expects a finished result: built, checked in a browser, covered by tests, documented.
 
 ## Commands
@@ -34,7 +34,7 @@ npm run screenshots  # refresh docs/screenshots/*.png
 6. **Zero-dependency server.** Node 24 runs `.ts` directly: in `server/` imports **include the `.ts` extension** and only erasable syntax is allowed (no `enum`, `namespace`, constructor parameter properties). In `src/` imports have no extension (Vite).
 7. **`src/core/` has no DOM.** The game logic may have to move to the server (to protect the economy).
 8. Game time only via `game.now()`. No `Date.now()` in game logic (except real calendar days for gifts and bonuses: `dayIndex()`).
-9. Commit and push only when the owner asks. Branch `main`; remote `github.com/Elkhan-Isayev/lovely-farm.fun` (public).
+9. Commit and push only when the owner asks. Branch `main`; remote `github.com/Elkhan-Isayev/lovely-farm.fun` (private at the moment).
 
 ## After finishing work
 

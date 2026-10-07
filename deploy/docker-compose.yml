@@ -1,0 +1,49 @@
+# Production stack on the server (/opt/lovely-farm): the game behind Caddy, which terminates HTTPS.
+# Only Caddy publishes ports (80/443); the game is reachable from Caddy alone.
+# Settings come from /opt/lovely-farm/.env (SITE_ADDRESS, SECURE_COOKIE) — see deploy/README.md.
+name: lovely-farm
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: json-file
+    options: { max-size: 10m, max-file: "3" }
+
+services:
+  farm:
+    <<: *hardening
+    image: lovely-farm:current # loaded by deploy.sh from the CI build
+    environment:
+      SECURE_COOKIE: ${SECURE_COOKIE:-0} # 1 once the site is served over HTTPS
+      TRUST_PROXY: "1" # the client IP comes from Caddy's X-Forwarded-For
+    volumes:
+      - farm-data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    pids_limit: 256
+
+  caddy:
+    <<: *hardening
+    image: caddy:2-alpine
+    depends_on: [farm]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80} # ":80" until the domain points here, then "lovely-farm.fun, www.lovely-farm.fun"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    mem_limit: 256m
+
+volumes:
+  farm-data:
+  caddy-data:
+  caddy-config:

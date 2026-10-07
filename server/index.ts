@@ -12,6 +12,7 @@ const app = createApp({
   db: openDb(dbFile),
   staticDir: resolve(process.env.STATIC_DIR ?? 'dist'),
   secureCookie: process.env.SECURE_COOKIE === '1',
+  trustProxy: process.env.TRUST_PROXY === '1',
 });
 
 createServer(app.handle).listen(PORT, () => {

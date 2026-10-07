@@ -2,7 +2,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { MESSAGES, type Lang } from '../../src/i18n';
 
+/** Everything the Content-Security-Policy blocked on any page of the run. */
+const cspViolations: string[] = [];
+
 async function register(page: Page, login: string, name: string) {
+  page.on('console', (m) => { if (/Content Security Policy/i.test(m.text())) cspViolations.push(m.text()); });
   await page.goto('/?dev');
   await page.click('[data-switch]');
   await page.fill('input[name=login]', login);
@@ -83,4 +87,9 @@ test('phone: the UI fits without horizontal scrolling', async ({ browser }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
   await expect(page.locator('.toolbar')).toBeVisible();
+});
+
+test.afterAll(() => {
+  // the game, its fonts, art and music all load under the strict CSP
+  expect(cspViolations).toEqual([]);
 });

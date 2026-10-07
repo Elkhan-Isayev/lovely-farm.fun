@@ -1,0 +1,54 @@
+# CI: typecheck, unit/integration tests with coverage thresholds and Playwright e2e on every push and PR.
+# CD: after a green run on main, the Docker image is built here and streamed to the server over SSH,
+# where deploy/deploy.sh (the forced command of the deploy key) loads it, restarts the stack and rolls
+# back if the health check fails. Secrets: DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS.
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:all
+
+  deploy:
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t "lovely-farm:${GITHUB_SHA::12}" .
+      - name: SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Deploy
+        run: |
+          docker save "lovely-farm:${GITHUB_SHA::12}" | gzip -1 \
+            | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@${{ secrets.DEPLOY_HOST }}"
+      - name: Clean up the key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

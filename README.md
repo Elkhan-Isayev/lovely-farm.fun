@@ -234,6 +234,8 @@ lovely-farm/
 ├── tests/                   Vitest (happy-dom + fake canvas), tests/e2e — Playwright
 ├── public/                  art/ painted sprites (WebP, cut from art/sheets/), audio/ music
 ├── scripts/                 dev.mjs (API + Vite), screenshots.mjs, art/ (sheet cutting + prompts)
+├── deploy/                  production: compose, Caddyfile, server setup, deploy and backup scripts
+├── .github/workflows/       CI/CD
 ├── docs/                    RESEARCH.md (about the original), screenshots/
 ├── CLAUDE.md                instructions for Claude Code
 └── Dockerfile
@@ -325,9 +327,23 @@ Russian text in tests appears only where a test checks the Russian locale's outp
 
 ## 🚢 Deployment
 
+Production runs on a DigitalOcean droplet (Ubuntu 24.04): the game in Docker behind [Caddy](https://caddyserver.com) (automatic HTTPS). Everything is in [`deploy/`](deploy/README.md); **CI/CD** is [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+```mermaid
+flowchart LR
+    PUSH["push to main"] --> TEST["CI: typecheck · coverage · e2e"]
+    TEST -->|green| BUILD["docker build"]
+    BUILD -->|"docker save | ssh"| SRV["server: deploy.sh<br/>load → restart → health check → rollback on failure"]
+```
+
+- **Security**: no root login, SSH keys only (no passwords), only ports 22/80/443 open (ufw), fail2ban, automatic security updates; the CI key can only run `deploy.sh`; the game container is unprivileged, read-only, without capabilities, reachable only through Caddy; strict CSP and security headers.
+- **Backups**: a consistent SQLite copy every night (`deploy/backup.sh`), 14 days kept.
+
+Running it yourself:
+
 ```bash
 docker build -t lovely-farm .
-docker run -d --name farm -p 3000:3000 -v farm-data:/data -e SECURE_COOKIE=1 lovely-farm
+docker run -d --name farm -p 3000:3000 -v farm-data:/data lovely-farm
 ```
 
 | Variable | Default | Description |
@@ -335,25 +351,8 @@ docker run -d --name farm -p 3000:3000 -v farm-data:/data -e SECURE_COOKIE=1 lov
 | `PORT` | `3000` | port |
 | `DATA_DIR` | `./data` (`/data` in Docker) | where `farm.sqlite` lives — **back this file up** |
 | `STATIC_DIR` | `./dist` | the built client |
-| `SECURE_COOKIE` | — | `1` behind HTTPS |
-
-<details>
-<summary><b>nginx in front of the server</b></summary>
-
-```nginx
-server {
-    server_name lovely-farm.fun;
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
-        client_max_body_size 4m;
-    }
-}
-```
-
-Hot backup: `sqlite3 /data/farm.sqlite ".backup '/backups/farm-$(date +%F).sqlite'"`.
-</details>
+| `SECURE_COOKIE` | — | `1` when served over HTTPS |
+| `TRUST_PROXY` | — | `1` behind your own reverse proxy: the client IP is the last `X-Forwarded-For` entry (otherwise the header is ignored, so it cannot be forged to get around the sign-in rate limit) |
 
 ---
 
