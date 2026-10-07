@@ -5,6 +5,9 @@ export const en: Messages = {
   'app.title': 'Lovely Farm',
   'app.tagline': 'Plant, water, chase the crows and visit your friends',
   'app.disclaimer': 'A fan remake of «Lyubimaya Ferma» (Lovely Farm, Mail.ru, 2010–2016). Not affiliated with the rights holders.',
+  'about.title': 'About the game',
+  'about.contact': 'Questions and suggestions:',
+  'about.credits': 'Music made with Suno, art made with Higgsfield.',
   'app.serverDown': 'The farm server is unavailable. Make sure it is running and reload the page.',
 
   'auth.login': 'Login',

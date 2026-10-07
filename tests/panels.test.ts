@@ -349,6 +349,20 @@ describe('gifts, achievements, profile, pet', () => {
     expect($('[data-ach=harvest]').textContent).toContain('All tiers completed');
   });
 
+  it('profile: about the game — disclaimer, contact, credits', () => {
+    const { ctx } = makeCtx();
+    openProfile(ctx);
+    const about = $('[data-about]');
+    expect(about.textContent).toContain('About the game');
+    expect(about.textContent).toContain('Not affiliated');
+    expect(about.textContent).toContain('Suno'); // Suno's free plan requires attribution
+    const link = $<HTMLAnchorElement>('[data-about] [data-contact]');
+    expect(link.href).toBe('https://github.com/Elkhan-Isayev');
+    expect(link.target).toBe('_blank');
+    expect(link.rel).toBe('noopener noreferrer');
+    expect(link.textContent).toBe('github.com/Elkhan-Isayev');
+  });
+
   it('profile: language, gender, colours, speed, logout', () => {
     const { ctx, game } = makeCtx();
     openProfile(ctx);

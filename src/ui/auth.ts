@@ -2,6 +2,7 @@
 import { onLangChange, t } from '../i18n';
 import type { Api } from '../net/api';
 import { h } from './dom';
+import { contactLine } from './about';
 import { root } from './modal';
 import { langPicker } from './panels';
 
@@ -57,7 +58,8 @@ export function showAuth(api: Api, onDone: () => void): HTMLElement {
       h('div', { class: 'logo' }, ...t('app.title').split(' ').map((w) => h('span', null, w)), h('span', { class: 'heart' }, '❤')),
       h('p', { class: 'sub center' }, t('app.tagline')),
       form,
-      h('p', { class: 'tiny' }, t('app.disclaimer'))));
+      h('p', { class: 'tiny' }, t('app.disclaimer')),
+      contactLine()));
     login.focus();
   };
 

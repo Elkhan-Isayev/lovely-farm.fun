@@ -5,6 +5,9 @@ export const az: Messages = {
   'app.title': 'Sevimli Ferma',
   'app.tagline': 'Ək, sula, qarğaları qov və dostlarına qonaq get',
   'app.disclaimer': '«Lyubimaya Ferma» (Sevimli Ferma, Mail.ru, 2010–2016) oyununun fanat versiyası. Hüquq sahibləri ilə əlaqəsi yoxdur.',
+  'about.title': 'Oyun haqqında',
+  'about.contact': 'Suallar və təkliflər üçün:',
+  'about.credits': 'Musiqi Suno ilə, qrafika Higgsfield ilə yaradılıb.',
   'app.serverDown': 'Ferma serveri əlçatan deyil. Serverin işlədiyini yoxlayın və səhifəni yeniləyin.',
 
   'auth.login': 'Login',

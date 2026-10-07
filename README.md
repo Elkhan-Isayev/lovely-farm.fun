@@ -379,4 +379,8 @@ Contributions on any of these are welcome.
 
 A non-commercial fan project. *Lyubimaya Ferma* is a trademark of its rights holders; this project is not affiliated with them. All graphics are new (generated for this project with Higgsfield, or drawn in code); no assets of the original are used. Research on the original is based on public player reviews and guides; sources are listed in [docs/RESEARCH.md](docs/RESEARCH.md).
 
+**Credits.** Music made with [Suno](https://suno.com) (free plan: non-commercial use with attribution). Art generated with [Higgsfield](https://higgsfield.ai). Fonts: Lobster and Nunito (Google Fonts, SIL Open Font License).
+
+**Contact**: questions and suggestions — [github.com/Elkhan-Isayev](https://github.com/Elkhan-Isayev).
+
 <div align="center"><sub>Happy harvesting! 🥕</sub></div>

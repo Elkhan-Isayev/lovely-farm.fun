@@ -11,6 +11,7 @@ import { HOUR, dayIndex, type FarmObject, type Look } from '../core/state';
 import { LANGS, getLang, itemName, name, personName, placeName, setLang, t, type MsgKey } from '../i18n';
 import type { AppCtx } from './ctx';
 import { clear, fmt, fmtDiamonds, fmtHours, fmtTime, h } from './dom';
+import { aboutBlock } from './about';
 import { itemIcon, placeIcon } from './icons';
 import { confirmBox, openModal, toast, type Modal } from './modal';
 
@@ -476,6 +477,7 @@ export function openProfile(ctx: AppCtx) {
     ctx.dev ? h('div', null, h('h3', null, t('prof.speed')), h('div', { class: 'row center' },
       [1, 60, 600].map((sp) => h('button', { class: 'btn small' + (g.s.clock.speed === sp ? ' green' : ''), 'data-speed': sp, onclick: () => { g.setSpeed(sp); draw(); } }, `×${sp}`)))) : null,
     ctx.user ? h('div', { class: 'row center' }, h('span', { class: 'sub' }, t('prof.loggedAs', { login: ctx.user.login })), h('button', { class: 'btn small red', 'data-logout': '', onclick: () => ctx.logout() }, t('prof.logout'))) : null,
+    aboutBlock(),
   );
   draw();
   return m;

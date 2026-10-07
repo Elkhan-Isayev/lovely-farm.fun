@@ -5,6 +5,9 @@ export const de: Messages = {
   'app.title': 'Lieblingsfarm',
   'app.tagline': 'Pflanzen, gießen, Krähen verjagen und Freunde besuchen',
   'app.disclaimer': 'Fan-Remake von «Lyubimaya Ferma» (Lieblingsfarm, Mail.ru, 2010–2016). Keine Verbindung zu den Rechteinhabern.',
+  'about.title': 'Über das Spiel',
+  'about.contact': 'Fragen und Vorschläge:',
+  'about.credits': 'Musik erstellt mit Suno, Grafik mit Higgsfield.',
   'app.serverDown': 'Der Farm-Server ist nicht erreichbar. Prüfe, ob er läuft, und lade die Seite neu.',
 
   'auth.login': 'Benutzername',

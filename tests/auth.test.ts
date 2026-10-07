@@ -12,6 +12,7 @@ describe('sign-in screen', () => {
     let done = 0;
     showAuth(api, () => done++);
     expect($('.logo').textContent).toContain('Lovely');
+    expect($<HTMLAnchorElement>('.auth [data-contact]').href).toBe('https://github.com/Elkhan-Isayev');
     ($('input[name=login]') as HTMLInputElement).value = '  lena ';
     ($('input[name=password]') as HTMLInputElement).value = 'secret1';
     submit();
