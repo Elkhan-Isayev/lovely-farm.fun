@@ -62,8 +62,9 @@ JSON
   chown deploy:deploy /home/deploy/.ssh/authorized_keys
   chmod 600 /home/deploy/.ssh/authorized_keys
 
-  # the app folder: compose, Caddyfile and scripts are copied here from deploy/
+  # the app folder: compose, Caddyfile and scripts are copied here from deploy/ (the admin may read it too)
   install -d -m 750 -o root -g deploy "$APP"
+  usermod -aG deploy "$ADMIN_USER"
 
   # firewall: SSH (rate-limited), HTTP and HTTPS only
   ufw --force reset >/dev/null

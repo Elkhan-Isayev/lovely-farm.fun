@@ -1,11 +1,12 @@
 node_modules
-dist
 .DS_Store
-.e2e-data
-data
-test-results
-playwright-report
-coverage
+# build, test and runtime output — anchored to the root, so src/data/ (game content) is not ignored
+/dist
+/.e2e-data
+/data
+/test-results
+/playwright-report
+/coverage
 .idea
 .vscode
 *.log

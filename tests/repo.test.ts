@@ -26,6 +26,11 @@ describe('repository', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('no source file is git-ignored (an over-broad .gitignore once hid src/data/)', () => {
+    const ignored = execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard', 'src', 'server', 'tests', 'scripts', 'deploy', 'public'], { encoding: 'utf8' });
+    expect(ignored.trim()).toBe('');
+  });
+
   it('deploy scripts are valid bash and executable; the stack publishes only 80/443', () => {
     for (const f of ['deploy/setup-server.sh', 'deploy/deploy.sh', 'deploy/backup.sh']) {
       execFileSync('bash', ['-n', f]); // throws on a syntax error
