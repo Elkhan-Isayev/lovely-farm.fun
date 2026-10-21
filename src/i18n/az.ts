@@ -18,6 +18,8 @@ export const az: Messages = {
   'auth.register': 'Qeydiyyatdan keç',
   'auth.toRegister': 'Hesabınız yoxdur? Qeydiyyatdan keçin',
   'auth.toLogin': 'Artıq hesabınız var? Daxil olun',
+  'auth.play': 'Oyna',
+  'auth.localHint': 'Gedişatınız bu brauzerdə saxlanılır. Dostlar oyunun serveri olanda gələcək.',
 
   'common.level': '{n} səv.',
   'common.free': 'pulsuz',
@@ -300,6 +302,7 @@ export const az: Messages = {
   'err.not_found': 'Belə metod yoxdur',
   'err.server': 'Server xətası',
   'err.network': 'Serverlə əlaqə yoxdur',
+  'err.storage_full': 'Saxlamaq alınmadı: brauzerdə yer qalmayıb',
 };
 
 export const azNames: NameDict = {

@@ -386,7 +386,7 @@ describe('static files and misc', () => {
     const page = await fetch(base + '/');
     for (const h of ['x-content-type-options', 'referrer-policy', 'x-frame-options', 'permissions-policy']) expect(page.headers.get(h)).toBeTruthy();
     expect(page.headers.get('content-security-policy')).toBe(CSP);
-    expect(CSP).toContain("script-src 'self' https://static.cloudflareinsights.com"); // our scripts + Cloudflare Web Analytics only
+    expect(CSP).toContain("script-src 'self';"); // our own scripts only
     expect(CSP).not.toContain('unsafe-eval');
     expect(CSP).toContain("frame-ancestors 'none'");
     const api = await fetch(base + '/api/me');

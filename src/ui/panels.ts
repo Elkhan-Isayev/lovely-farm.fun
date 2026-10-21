@@ -476,7 +476,8 @@ export function openProfile(ctx: AppCtx) {
       h('div', null, t('prof.earned', { n: fmt(g.s.stats.earned ?? 0) })), h('div', null, t('prof.helped', { n: fmt(g.s.stats.helped ?? 0) }))),
     ctx.dev ? h('div', null, h('h3', null, t('prof.speed')), h('div', { class: 'row center' },
       [1, 60, 600].map((sp) => h('button', { class: 'btn small' + (g.s.clock.speed === sp ? ' green' : ''), 'data-speed': sp, onclick: () => { g.setSpeed(sp); draw(); } }, `×${sp}`)))) : null,
-    ctx.user ? h('div', { class: 'row center' }, h('span', { class: 'sub' }, t('prof.loggedAs', { login: ctx.user.login })), h('button', { class: 'btn small red', 'data-logout': '', onclick: () => ctx.logout() }, t('prof.logout'))) : null,
+    ctx.user && ctx.api ? h('div', { class: 'row center' }, h('span', { class: 'sub' }, t('prof.loggedAs', { login: ctx.user.login })), h('button', { class: 'btn small red', 'data-logout': '', onclick: () => ctx.logout() }, t('prof.logout'))) : null,
+    ctx.user && !ctx.api ? h('p', { class: 'sub center', 'data-local-hint': '' }, t('auth.localHint')) : null,
     aboutBlock(),
   );
   draw();

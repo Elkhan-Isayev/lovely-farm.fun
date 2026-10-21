@@ -36,6 +36,8 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T> 
 }
 
 export const api = {
+  /** false: the HTTP server; the static build uses net/local.ts (localStorage) instead */
+  local: false as boolean,
   register: (login: string, password: string, name: string, face: string) => call<{ ok: true }>('POST', '/api/register', { login, password, name, face }),
   login: (login: string, password: string) => call<{ ok: true }>('POST', '/api/login', { login, password }),
   logout: () => call<{ ok: true }>('POST', '/api/logout'),

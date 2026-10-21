@@ -6,7 +6,7 @@ import { ART } from './artManifest';
 const loaded = new Map<string, HTMLImageElement>();
 const started = new Set<string>();
 
-export const ART_DIR = '/art/';
+export const ART_DIR = `${import.meta.env.BASE_URL}art/`;
 
 export function hasArt(id: string): boolean {
   return id in ART;

@@ -6,11 +6,13 @@
 
 Plant radishes, chase crows, feed your dog and visit your friends' farms — just like back then, in a 2026 browser.
 
+### ▶️ [Play now: elkhan-isayev.github.io/lovely-farm.fun](https://elkhan-isayev.github.io/lovely-farm.fun/)
+
 ![Node](https://img.shields.io/badge/Node.js-24+-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![SQLite](https://img.shields.io/badge/SQLite-node%3Asqlite-003B57?logo=sqlite&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-302%20unit%20%2B%203%20e2e-brightgreen)
+![Tests](https://img.shields.io/badge/tests-376%20unit%20%2B%204%20e2e-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-99.5%25-brightgreen)
 ![i18n](https://img.shields.io/badge/i18n-RU%20%C2%B7%20EN%20%C2%B7%20DE%20%C2%B7%20AZ-orange)
 ![Runtime deps](https://img.shields.io/badge/server%20runtime%20deps-0-blue)
@@ -234,8 +236,7 @@ lovely-farm/
 ├── tests/                   Vitest (happy-dom + fake canvas), tests/e2e — Playwright
 ├── public/                  art/ painted sprites (WebP, cut from art/sheets/), audio/ music
 ├── scripts/                 dev.mjs (API + Vite), screenshots.mjs, art/ (sheet cutting + prompts)
-├── deploy/                  production: compose, Caddyfile, server setup, deploy and backup scripts
-├── .github/workflows/       CI/CD
+├── .github/workflows/       CI/CD: tests, then the static build to GitHub Pages
 ├── docs/                    RESEARCH.md (about the original), screenshots/
 ├── CLAUDE.md                instructions for Claude Code
 └── Dockerfile
@@ -317,7 +318,7 @@ Migrations are idempotent and run at startup (`server/db.ts`). Expired sessions,
 | UI | every window and button in happy-dom with a real game and a fake API |
 | Input | pointer, pinch, wheel, keys |
 | Server | **real HTTP and a real SQLite database** in a temp folder: all routes, limits, sessions, migrations, static files, 413/429/500 |
-| End to end | Playwright: two browsers sign up, become friends, one helps the other and sends a gift; language switching; phone layout |
+| End to end | Playwright: two browsers sign up, become friends, one helps the other and sends a gift; language switching; phone layout. The static (GitHub Pages) build separately: play without a server, progress survives a reload, no `/api` requests, no CSP violations |
 
 The tests have already caught 6 real bugs: Cyrillic login case sensitivity, a hanging connection after a 413, double charging on a double click, the watering can versus a toad, `readyAt = 0`, and the friend search being wiped by a list refresh.
 
@@ -327,17 +328,22 @@ Russian text in tests appears only where a test checks the Russian locale's outp
 
 ## 🚢 Deployment
 
-Production: **https://lovely-farm.fun** — Cloudflare in front, a DigitalOcean droplet (Ubuntu 24.04) behind it, the game in Docker behind [Caddy](https://caddyserver.com). Everything is in [`deploy/`](deploy/README.md); **CI/CD** is [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+The game is published on **GitHub Pages: https://elkhan-isayev.github.io/lovely-farm.fun/**. **CI/CD** is [`.github/workflows/ci.yml`](.github/workflows/ci.yml); it needs no secrets:
 
 ```mermaid
 flowchart LR
     PUSH["push to main"] --> TEST["CI: typecheck · coverage · e2e"]
-    TEST -->|green| BUILD["docker build"]
-    BUILD -->|"docker save | ssh"| SRV["server: deploy.sh<br/>load → restart → health check → rollback on failure"]
+    TEST -->|green| BUILD["static build<br/>VITE_STATIC=1"]
+    BUILD --> PAGES["GitHub Pages"]
 ```
 
-- **Security**: Cloudflare in front (DDoS protection, "Full (strict)" TLS to an origin certificate) and the web ports open to Cloudflare only; no root login, SSH keys only (no passwords), fail2ban, automatic security updates; the CI key can only run `deploy.sh`; the game container is unprivileged, read-only, without capabilities, reachable only through Caddy; strict CSP and security headers.
-- **Backups**: a consistent SQLite copy every night (`deploy/backup.sh`), 14 days kept.
+Pages serves files only, so the published game is **single-player**: the static build (`VITE_STATIC=1`) swaps the HTTP API for [`src/net/local.ts`](src/net/local.ts), which keeps the profile and the farm in the player's `localStorage`. The start screen asks only for a name and an avatar; neighbours and the showcase farms work, friends, help and gifts need the server. Pages cannot send headers, so the build puts the same Content Security Policy into a `<meta>` tag; `VITE_BASE` sets the sub-path (`/lovely-farm.fun/`).
+
+```bash
+VITE_STATIC=1 VITE_BASE=/lovely-farm.fun/ npx vite build   # what CI publishes
+```
+
+**Multiplayer** needs the Node server (the same code, kept and tested).
 
 Running it yourself:
 

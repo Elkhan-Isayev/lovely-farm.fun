@@ -16,6 +16,8 @@ export const ru = {
   'auth.register': 'Зарегистрироваться',
   'auth.toRegister': 'Нет аккаунта? Зарегистрироваться',
   'auth.toLogin': 'Уже есть аккаунт? Войти',
+  'auth.play': 'Играть',
+  'auth.localHint': 'Прогресс сохраняется в этом браузере. Друзья появятся, когда у игры будет сервер.',
 
   'common.level': '{n} ур.',
   'common.free': 'бесплатно',
@@ -298,6 +300,7 @@ export const ru = {
   'err.not_found': 'Нет такого метода',
   'err.server': 'Ошибка сервера',
   'err.network': 'Нет связи с сервером',
+  'err.storage_full': 'Не удалось сохранить: в браузере закончилось место',
 } as const;
 
 export type MsgKey = keyof typeof ru;

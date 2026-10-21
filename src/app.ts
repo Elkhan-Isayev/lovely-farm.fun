@@ -79,7 +79,7 @@ export function start(
 
   const audio = env.audio ?? new GameAudio();
   const ctx: AppCtx = {
-    game, api, user, incoming: [], outgoing: [], dev: !!env.dev, audio,
+    game, api: api.local ? null : api, user, incoming: [], outgoing: [], dev: !!env.dev, audio,
     ctrl: null as unknown as Controller,
     refreshFriends: async () => {
       try {

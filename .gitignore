@@ -3,6 +3,8 @@ node_modules
 # build, test and runtime output — anchored to the root, so src/data/ (game content) is not ignored
 /dist
 /.e2e-data
+/.e2e-static
+/.e2e-static-data
 /data
 /test-results
 /playwright-report

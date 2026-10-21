@@ -1,6 +1,26 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type Plugin } from 'vitest/config';
+import { CSP } from './server/app.ts';
+
+/**
+ * The static build (GitHub Pages: VITE_STATIC=1) has no server to send security headers,
+ * so the page carries the same Content-Security-Policy in a <meta> tag
+ * (frame-ancestors cannot be set that way, the rest applies).
+ */
+function staticCsp(): Plugin {
+  const policy = CSP.split('; ').filter((d) => !d.startsWith('frame-ancestors')).join('; ');
+  return {
+    name: 'static-csp',
+    apply: 'build',
+    transformIndexHtml: (html) => (process.env.VITE_STATIC === '1'
+      ? html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />`)
+      : html),
+  };
+}
 
 export default defineConfig({
+  // GitHub Pages serves the game from /lovely-farm.fun/ (VITE_BASE); everything else from /
+  base: process.env.VITE_BASE ?? '/',
+  plugins: [staticCsp()],
   server: {
     port: 5173,
     proxy: { '/api': 'http://localhost:3000' },

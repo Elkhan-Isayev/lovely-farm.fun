@@ -18,6 +18,8 @@ export const en: Messages = {
   'auth.register': 'Sign up',
   'auth.toRegister': 'No account yet? Sign up',
   'auth.toLogin': 'Already have an account? Sign in',
+  'auth.play': 'Play',
+  'auth.localHint': 'Your progress is saved in this browser. Friends will come when the game has a server.',
 
   'common.level': 'lvl {n}',
   'common.free': 'free',
@@ -300,6 +302,7 @@ export const en: Messages = {
   'err.not_found': 'Unknown method',
   'err.server': 'Server error',
   'err.network': 'No connection to the server',
+  'err.storage_full': 'Could not save: the browser is out of storage space',
 };
 
 export const enNames: NameDict = {

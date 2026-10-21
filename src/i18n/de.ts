@@ -18,6 +18,8 @@ export const de: Messages = {
   'auth.register': 'Registrieren',
   'auth.toRegister': 'Noch kein Konto? Registrieren',
   'auth.toLogin': 'Schon ein Konto? Anmelden',
+  'auth.play': 'Spielen',
+  'auth.localHint': 'Dein Fortschritt wird in diesem Browser gespeichert. Freunde kommen, sobald das Spiel einen Server hat.',
 
   'common.level': 'Lv. {n}',
   'common.free': 'gratis',
@@ -300,6 +302,7 @@ export const de: Messages = {
   'err.not_found': 'Unbekannte Methode',
   'err.server': 'Serverfehler',
   'err.network': 'Keine Verbindung zum Server',
+  'err.storage_full': 'Speichern fehlgeschlagen: Der Browser hat keinen Speicherplatz mehr',
 };
 
 export const deNames: NameDict = {

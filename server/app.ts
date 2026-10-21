@@ -28,13 +28,10 @@ const SECURITY_HEADERS: Record<string, string> = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
 };
 
-/**
- * For the page itself: only our own scripts; Google Fonts; data: images (rendered icons); and Cloudflare
- * Web Analytics, which Cloudflare injects into pages it proxies (its beacon script and where it reports).
- */
+/** For the page itself: only our own scripts; Google Fonts; data: images (rendered icons). */
 export const CSP = [
-  "default-src 'self'", "script-src 'self' https://static.cloudflareinsights.com", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:", "media-src 'self'", "connect-src 'self' https://cloudflareinsights.com",
+  "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com", "img-src 'self' data:", "media-src 'self'", "connect-src 'self'",
   "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'",
 ].join('; ');
 

@@ -28,7 +28,9 @@ export function showAuth(api: Api, onDone: () => void): HTMLElement {
         (e.currentTarget as HTMLElement).classList.add('active');
       },
     }, f)));
-    const submit = h('button', { class: 'btn green big', type: 'submit' }, mode === 'login' ? t('auth.signIn') : t('auth.register'));
+    // the static build (no server): just a name, an avatar and Play — progress stays in this browser
+    if (api.local) mode = 'register';
+    const submit = h('button', { class: 'btn green big', type: 'submit' }, api.local ? t('auth.play') : mode === 'login' ? t('auth.signIn') : t('auth.register'));
     const form = h('form', {
       class: 'auth-form',
       onsubmit: async (e: Event) => {
@@ -36,7 +38,8 @@ export function showAuth(api: Api, onDone: () => void): HTMLElement {
         err.textContent = '';
         submit.disabled = true;
         try {
-          if (mode === 'login') await api.login(login.value.trim(), pass.value);
+          if (api.local) await api.register(name.value.trim(), '', name.value.trim(), face);
+          else if (mode === 'login') await api.login(login.value.trim(), pass.value);
           else await api.register(login.value.trim(), pass.value, name.value.trim(), face);
           screen.remove();
           onDone();
@@ -47,11 +50,13 @@ export function showAuth(api: Api, onDone: () => void): HTMLElement {
         }
       },
     },
-    login, pass,
+    api.local ? null : login, api.local ? null : pass,
     mode === 'register' ? h('div', { class: 'reg-only' }, name, h('div', { class: 'sub' }, t('auth.avatar')), faces) : null,
     err, submit,
-    h('button', { class: 'link', type: 'button', 'data-switch': '', onclick: () => { mode = mode === 'login' ? 'register' : 'login'; render(); } },
-      mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')));
+    api.local
+      ? h('p', { class: 'sub center', 'data-local-hint': '' }, t('auth.localHint'))
+      : h('button', { class: 'link', type: 'button', 'data-switch': '', onclick: () => { mode = mode === 'login' ? 'register' : 'login'; render(); } },
+        mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')));
 
     screen.replaceChildren(h('div', { class: 'auth-card' },
       langPicker(),
@@ -60,7 +65,7 @@ export function showAuth(api: Api, onDone: () => void): HTMLElement {
       form,
       h('p', { class: 'tiny' }, t('app.disclaimer')),
       contactLine()));
-    login.focus();
+    (api.local ? name : login).focus();
   };
 
   render();

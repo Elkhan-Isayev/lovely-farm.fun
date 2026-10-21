@@ -1,7 +1,7 @@
-# CI: typecheck, unit/integration tests with coverage thresholds and Playwright e2e on every push and PR.
-# CD: after a green run on main, the Docker image is built here and streamed to the server over SSH,
-# where deploy/deploy.sh (the forced command of the deploy key) loads it, restarts the stack and rolls
-# back if the health check fails. Secrets: DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS.
+# CI: typecheck, unit/integration tests with coverage thresholds and Playwright e2e (the full game with its
+# server, and the static build) on every push and PR.
+# CD: after a green run on main, the static build (VITE_STATIC=1: no server, the farm lives in the
+# player's browser) is published to GitHub Pages.
 name: CI/CD
 
 on:
@@ -27,28 +27,36 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:all
 
-  deploy:
+  pages:
     needs: test
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04 # pinned: ubuntu-latest moves to 26 on 2026-10-19; Playwright deps must match
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      pages: write # publish to GitHub Pages
+      id-token: write # prove the deployment comes from this workflow
     concurrency:
-      group: production
+      group: pages
       cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      - name: Build the image
-        run: docker build -t "lovely-farm:${GITHUB_SHA::12}" .
-      - name: SSH key
-        run: |
-          install -m 700 -d ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-      - name: Deploy
-        run: |
-          docker save "lovely-farm:${GITHUB_SHA::12}" | gzip -1 \
-            | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "deploy@${{ secrets.DEPLOY_HOST }}"
-      - name: Clean up the key
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - id: pages
+        uses: actions/configure-pages@v6
+      - name: Build the static game
+        run: npx vite build
+        env:
+          VITE_STATIC: '1'
+          VITE_BASE: ${{ steps.pages.outputs.base_path }}/ # "/lovely-farm.fun/", or "/" with a custom domain
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v5

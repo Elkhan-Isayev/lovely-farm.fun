@@ -58,7 +58,7 @@ export class Music {
       if (this.order.length > 1 && this.order[0] === last) [this.order[0], this.order[1]] = [this.order[1], this.order[0]];
       this.index = 0;
     }
-    const src = `/audio/${this.order[this.index++]}`;
+    const src = `${import.meta.env.BASE_URL}audio/${this.order[this.index++]}`;
     const t = this.make(src);
     t.volume = this.volume;
     t.addEventListener('ended', () => { if (this.current === t) this.next(); });
